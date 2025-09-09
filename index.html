@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Value Investor's Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+        }
+        .input-field {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #d1d5db;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #4b5563;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #6b7280;
+        }
+         .btn-danger {
+            background-color: #ef4444;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        .result-box {
+            border: 2px solid;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .buy-zone { border-color: #22c55e; color: #22c55e; }
+        .hold-zone { border-color: #eab308; color: #eab308; }
+        .sell-zone { border-color: #ef4444; color: #ef4444; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        .ai-analysis-content h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #60a5fa; /* A lighter blue */
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .ai-analysis-content p {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-white">Value Investor's Dashboard</h1>
+            <p class="mt-2 text-lg text-gray-400">Automating the "Lao Tang" Valuation Method</p>
+            <p class="text-sm text-gray-500 mt-2">User ID: <span id="userIdDisplay">Initializing...</span></p>
+        </header>
+
+        <!-- Methodology Section -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-semibold text-white mb-4 border-b-2 border-gray-700 pb-2">The Methodology: "Don't Look at the Fool, Look at the Land"</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-xl font-bold text-blue-400 mb-2">Ideal Buy Point</h3>
+                    <p class="mb-4">The goal is to buy a great business at a fair price, creating a significant margin of safety. We buy at **50% of the company's reasonable valuation three years from now.**</p>
+                    <div class="text-sm p-4 bg-gray-800 rounded">
+                        <p class="font-mono break-words"><span class="font-bold text-green-400">Ideal Buy Price</span> = (Net Profit in 3 Yrs × Reasonable P/E) × 0.5</p>
+                    </div>
+                    <p class="text-xs mt-2 text-gray-400">A "Reasonable P/E" (default: 25) implies an earnings yield comparable to long-term risk-free rates.</p>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-xl font-bold text-blue-400 mb-2">Obvious Sell Point</h3>
+                    <p class="mb-4">Selling prevents greed from taking over when the market is euphoric. We sell when the business is **obviously overvalued**, defined as over **50 times the current year's earnings.**</p>
+                    <div class="text-sm p-4 bg-gray-800 rounded">
+                        <p class="font-mono break-words"><span class="font-bold text-red-400">Obvious Sell Price</span> = Current Year's Net Profit × Overvalued P/E</p>
+                    </div>
+                    <p class="text-xs mt-2 text-gray-400">The "Overvalued P/E" is fixed at 50, a level that signals extreme market optimism.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Application -->
+        <main class="grid lg:grid-cols-3 gap-8">
+            <!-- Input & Calculation Section -->
+            <div class="lg:col-span-1">
+                <div class="card p-6 rounded-lg sticky top-8">
+                    <h2 class="text-2xl font-semibold text-white mb-4">Valuation Calculator</h2>
+                    <form id="stockForm" class="space-y-4">
+                        <input type="hidden" id="stockId">
+                        <div>
+                            <label for="ticker" class="block text-sm font-medium">Ticker Symbol</label>
+                            <input type="text" id="ticker" class="input-field w-full mt-1 p-2 rounded" placeholder="e.g., AAPL" required>
+                        </div>
+                        <div>
+                            <label for="shares" class="block text-sm font-medium">Shares Outstanding (in Billions)</label>
+                            <input type="number" step="0.01" id="shares" class="input-field w-full mt-1 p-2 rounded" placeholder="e.g., 15.5" required>
+                        </div>
+                        <div>
+                            <label for="currentProfit" class="block text-sm font-medium">Current Year Est. Profit (in Billions)</label>
+                             <div class="flex items-center space-x-2">
+                                <input type="number" step="0.01" id="currentProfit" class="input-field w-full mt-1 p-2 rounded" placeholder="e.g., 101" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="futureProfit" class="block text-sm font-medium">3-Yr Future Est. Profit (in Billions)</label>
+                            <input type="number" step="0.01" id="futureProfit" class="input-field w-full mt-1 p-2 rounded" placeholder="e.g., 125" required>
+                        </div>
+                        <button type="button" id="suggestForecastBtn" class="btn-secondary w-full p-2 rounded font-semibold text-sm">✨ Suggest Forecast</button>
+                        <div class="grid grid-cols-2 gap-4 pt-2">
+                            <div>
+                                <label for="reasonablePE" class="block text-sm font-medium">Reasonable P/E</label>
+                                <input type="number" id="reasonablePE" class="input-field w-full mt-1 p-2 rounded" value="25">
+                            </div>
+                            <div>
+                                <label for="overvaluedPE" class="block text-sm font-medium">Overvalued P/E</label>
+                                <input type="number" id="overvaluedPE" class="input-field w-full mt-1 p-2 rounded" value="50">
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 pt-2">
+                             <button type="submit" class="btn-primary w-full p-2 rounded font-semibold">Save to Watchlist</button>
+                             <button type="button" id="calculateBtn" class="btn-secondary w-full p-2 rounded font-semibold">Calculate Only</button>
+                        </div>
+                         <button type="button" id="clearFormBtn" class="btn-secondary w-full p-2 rounded font-semibold mt-2">New Entry</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Output & Watchlist Section -->
+            <div class="lg:col-span-2 space-y-8">
+                 <!-- Calculation Result -->
+                <div class="card p-6 rounded-lg">
+                    <h2 class="text-2xl font-semibold text-white mb-4">Valuation Result</h2>
+                    <div id="resultOutput" class="text-center text-gray-400">
+                        <p>Enter stock data and click "Calculate" to see the results.</p>
+                    </div>
+                </div>
+                
+                 <!-- AI Analysis Section -->
+                <div class="card p-6 rounded-lg">
+                    <div class="flex justify-between items-center mb-4">
+                         <h2 class="text-2xl font-semibold text-white">✨ AI-Powered Analysis</h2>
+                         <button id="analyzeBtn" class="btn-primary px-4 py-2 text-sm rounded font-semibold">Analyze Ticker</button>
+                    </div>
+                    <div id="aiAnalysisOutput" class="text-gray-300">
+                        <p class="text-center text-gray-400">Enter a ticker symbol and click "Analyze" for a business quality overview.</p>
+                    </div>
+                </div>
+
+
+                <!-- Watchlist -->
+                <div class="card p-6 rounded-lg">
+                    <h2 class="text-2xl font-semibold text-white mb-4">My Watchlist</h2>
+                    <div id="loader" class="loader"></div>
+                    <div id="stockList" class="space-y-4">
+                        <!-- Stock items will be injected here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Corrected Firebase & Application Script -->
+    <script type="module">
+        // --- Your Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKoKZ7EOyGMDRhaO4bCaJSSDreJXH2WL8",
+            authDomain: "my-firebase-app-9aa8a.firebaseapp.com",
+            projectId: "my-firebase-app-9aa8a",
+            storageBucket: "my-firebase-app-9aa8a.appspot.com", // Corrected storageBucket name
+            messagingSenderId: "876784715917",
+            appId: "1:876784715917:web:5ba9417d0ee3fbd9cf3ac4",
+            measurementId: "G-YJFX7E92JP"
+        };
+        
+        const apiKey = firebaseConfig.apiKey;
+        const appId = firebaseConfig.appId;
+
+        // --- Firebase Module Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        
+        // --- DOM Elements ---
+        const stockForm = document.getElementById('stockForm');
+        const stockIdInput = document.getElementById('stockId');
+        const tickerInput = document.getElementById('ticker');
+        const sharesInput = document.getElementById('shares');
+        const currentProfitInput = document.getElementById('currentProfit');
+        const futureProfitInput = document.getElementById('futureProfit');
+        const reasonablePEInput = document.getElementById('reasonablePE');
+        const overvaluedPEInput = document.getElementById('overvaluedPE');
+        const stockListDiv = document.getElementById('stockList');
+        const loader = document.getElementById('loader');
+        const resultOutput = document.getElementById('resultOutput');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const clearFormBtn = document.getElementById('clearFormBtn');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const aiAnalysisOutput = document.getElementById('aiAnalysisOutput');
+        const suggestForecastBtn = document.getElementById('suggestForecastBtn');
+
+        // --- Firebase State ---
+        let app, db, auth;
+        let userId = null;
+        let unsubscribe = null;
+
+        // --- Core Functions ---
+        async function initFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplay.textContent = "Connected";
+                        loader.style.display = 'block';
+                        listenToStocks();
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                userIdDisplay.textContent = "Connection Failed";
+                resultOutput.innerHTML = `<p class="text-red-500">Error initializing application. Check console for details.</p>`;
+            }
+        }
+        
+        function listenToStocks() {
+            if (unsubscribe) unsubscribe(); 
+            if (!userId) return;
+
+            const stocksCollection = collection(db, `artifacts/${appId}/users/${userId}/stocks`);
+            const q = query(stocksCollection);
+
+            unsubscribe = onSnapshot(q, (querySnapshot) => {
+                loader.style.display = 'none';
+                const stocks = [];
+                querySnapshot.forEach((doc) => {
+                    stocks.push({ id: doc.id, ...doc.data() });
+                });
+                renderStockList(stocks);
+            }, (error) => {
+                console.error("Error listening to stocks:", error);
+                stockListDiv.innerHTML = `<p class="text-red-500">Could not load watchlist. Please refresh.</p>`;
+            });
+        }
+
+        function renderStockList(stocks) {
+            stockListDiv.innerHTML = '';
+            if (stocks.length === 0) {
+                stockListDiv.innerHTML = '<p class="text-center text-gray-400">Your watchlist is empty. Add a stock to begin.</p>';
+                return;
+            }
+
+            stocks.forEach(stock => {
+                const valuation = calculateValuation(stock, false);
+                const stockCard = document.createElement('div');
+                stockCard.className = 'card p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4';
+                stockCard.innerHTML = `
+                    <div class="flex-grow cursor-pointer" data-stock-id="${stock.id}">
+                        <h3 class="text-lg font-bold text-white">${stock.ticker}</h3>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400 mt-1">
+                            <span>Buy at: <strong class="text-green-400">$${valuation.idealBuyPrice.toFixed(2)}</strong></span>
+                            <span>Sell at: <strong class="text-red-400">$${valuation.obviousSellPrice.toFixed(2)}</strong></span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2 flex-shrink-0">
+                        <button class="btn-secondary px-3 py-1 text-sm rounded edit-btn" data-stock-id="${stock.id}">Edit</button>
+                        <button class="btn-danger px-3 py-1 text-sm rounded delete-btn" data-stock-id="${stock.id}">Delete</button>
+                    </div>
+                `;
+                stockListDiv.appendChild(stockCard);
+            });
+        }
+        
+        function calculateValuation(stockData, display = true) {
+            const { shares, currentProfit, futureProfit, reasonablePE, overvaluedPE } = stockData;
+            
+            const reasonableValuationY3 = futureProfit * reasonablePE;
+            const idealBuyPointTotal = reasonableValuationY3 * 0.5;
+            const idealBuyPrice = idealBuyPointTotal / shares;
+            
+            const obviousSellPointTotal = currentProfit * overvaluedPE;
+            const obviousSellPrice = obviousSellPointTotal / shares;
+
+            const result = { idealBuyPrice, obviousSellPrice };
+
+            if(display) {
+                resultOutput.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="result-box buy-zone">
+                            <h4 class="text-lg font-semibold">Ideal Buy Price</h4>
+                            <p class="text-3xl font-bold">$${idealBuyPrice.toFixed(2)}</p>
+                            <p class="text-xs text-gray-400">per share</p>
+                        </div>
+                        <div class="result-box sell-zone">
+                            <h4 class="text-lg font-semibold">Obvious Sell Price</h4>
+                            <p class="text-3xl font-bold">$${obviousSellPrice.toFixed(2)}</p>
+                             <p class="text-xs text-gray-400">per share</p>
+                        </div>
+                    </div>
+                `;
+            }
+            return result;
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (!userId) {
+                alert("Not connected to database. Please wait or refresh.");
+                return;
+            }
+
+            const stockData = {
+                ticker: tickerInput.value.toUpperCase(),
+                shares: parseFloat(sharesInput.value),
+                currentProfit: parseFloat(currentProfitInput.value),
+                futureProfit: parseFloat(futureProfitInput.value),
+                reasonablePE: parseInt(reasonablePEInput.value),
+                overvaluedPE: parseInt(overvaluedPEInput.value),
+            };
+
+            const stockId = stockIdInput.value;
+
+            try {
+                if (stockId) {
+                    const stockRef = doc(db, `artifacts/${appId}/users/${userId}/stocks`, stockId);
+                    await setDoc(stockRef, stockData, { merge: true });
+                } else {
+                    stockData.createdAt = serverTimestamp();
+                    const stocksCollection = collection(db, `artifacts/${appId}/users/${userId}/stocks`);
+                    await addDoc(stocksCollection, stockData);
+                }
+                clearForm();
+                calculateValuation(stockData);
+            } catch (error) {
+                console.error("Error saving stock:", error);
+                alert("Failed to save stock. Please try again.");
+            }
+        }
+
+        function populateFormForEdit(stock) {
+            stockIdInput.value = stock.id;
+            tickerInput.value = stock.ticker;
+            sharesInput.value = stock.shares;
+            currentProfitInput.value = stock.currentProfit;
+            futureProfitInput.value = stock.futureProfit;
+            reasonablePEInput.value = stock.reasonablePE;
+            overvaluedPEInput.value = stock.overvaluedPE;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function clearForm() {
+            stockForm.reset();
+            stockIdInput.value = '';
+            reasonablePEInput.value = 25;
+            overvaluedPEInput.value = 50;
+        }
+        
+        async function callGeminiAPI(systemPrompt, userQuery, retries = 3, delay = 1000) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        console.error("API Error Response:", errorBody);
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        return candidate.content.parts[0].text;
+                    } else {
+                         throw new Error("Invalid response structure from API.");
+                    }
+                } catch (error) {
+                    if (i === retries - 1) {
+                         console.error(`API call failed after ${retries} attempts:`, error);
+                         return null;
+                    }
+                    await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+                }
+            }
+        }
+
+        async function getBusinessAnalysis(ticker) {
+            const systemPrompt = `You are a world-class value investor, following the principles of Warren Buffett. Analyze the provided stock ticker. Your analysis MUST be concise and structured into three specific markdown sections: 
+1. #### Business Model: What does the company do and how does it make money?
+2. #### Competitive Moat: What gives it a durable competitive advantage? (e.g., brand, network effects, switching costs, cost advantages)
+3. #### Potential Risks: What are the key risks to its future profitability?`;
+            
+            const userQuery = `Provide a business quality analysis for the stock ticker: ${ticker}`;
+            
+            aiAnalysisOutput.innerHTML = '<div class="loader"></div>';
+            
+            const analysis = await callGeminiAPI(systemPrompt, userQuery);
+            
+            if (analysis) {
+                let htmlAnalysis = analysis
+                    .replace(/#### (.*?)\n/g, '<h4>$1</h4>')
+                    .replace(/\n/g, '<br>');
+                aiAnalysisOutput.innerHTML = `<div class="ai-analysis-content">${htmlAnalysis}</div>`;
+            } else {
+                aiAnalysisOutput.innerHTML = '<p class="text-red-500">Failed to fetch analysis. The API key might be invalid or the service is unavailable. Check the console for errors.</p>';
+            }
+        }
+
+        async function getForecastSuggestion(ticker) {
+            const systemPrompt = `You are a conservative financial analyst providing a starting point for a value investing model. Based on the latest available financial data and growth prospects for the given stock ticker, provide a reasonable, conservative estimate for:
+1. Current year's estimated net profit in billions of USD.
+2. A 3-year future estimated net profit in billions of USD.
+Your response MUST be in JSON format like this: {"currentProfit": 101.5, "futureProfit": 125.0}. Do NOT include any other text, explanations, or markdown.`;
+
+            const userQuery = `Provide profit forecasts for the stock ticker: ${ticker}`;
+            
+            suggestForecastBtn.disabled = true;
+            suggestForecastBtn.textContent = 'Suggesting...';
+            
+            const suggestion = await callGeminiAPI(systemPrompt, userQuery);
+
+            if (suggestion) {
+                try {
+                    const parsed = JSON.parse(suggestion);
+                    if(parsed.currentProfit && parsed.futureProfit) {
+                        currentProfitInput.value = parsed.currentProfit;
+                        futureProfitInput.value = parsed.futureProfit;
+                    } else {
+                        throw new Error("Missing properties in JSON response.");
+                    }
+                } catch (error) {
+                     console.error("Failed to parse forecast suggestion:", error);
+                     alert("AI returned an invalid format. Please try again.");
+                }
+            } else {
+                alert("Failed to get a forecast suggestion. The API key might be invalid or the service is unavailable. Check the console for errors.");
+            }
+            
+            suggestForecastBtn.disabled = false;
+            suggestForecastBtn.textContent = '✨ Suggest Forecast';
+        }
+
+        // --- Event Listeners ---
+        stockForm.addEventListener('submit', handleFormSubmit);
+
+        calculateBtn.addEventListener('click', () => {
+             if (stockForm.checkValidity()) {
+                const stockData = {
+                    ticker: tickerInput.value.toUpperCase(),
+                    shares: parseFloat(sharesInput.value),
+                    currentProfit: parseFloat(currentProfitInput.value),
+                    futureProfit: parseFloat(futureProfitInput.value),
+                    reasonablePE: parseInt(reasonablePEInput.value),
+                    overvaluedPE: parseInt(overvaluedPEInput.value),
+                };
+                calculateValuation(stockData);
+            } else {
+                stockForm.reportValidity();
+            }
+        });
+
+        clearFormBtn.addEventListener('click', () => {
+            clearForm();
+            resultOutput.innerHTML = '<p>Enter stock data and click "Calculate" to see the results.</p>';
+        });
+
+        analyzeBtn.addEventListener('click', () => {
+            const ticker = tickerInput.value;
+            if (ticker) {
+                getBusinessAnalysis(ticker);
+            } else {
+                alert('Please enter a ticker symbol first.');
+            }
+        });
+
+        suggestForecastBtn.addEventListener('click', () => {
+            const ticker = tickerInput.value;
+            if (ticker) {
+                getForecastSuggestion(ticker);
+            } else {
+                alert('Please enter a ticker symbol first.');
+            }
+        });
+
+        stockListDiv.addEventListener('click', async (e) => {
+            const target = e.target;
+            const stockId = target.dataset.stockId;
+
+            if (target.classList.contains('delete-btn')) {
+                if (confirm('Are you sure you want to delete this stock?')) {
+                    try {
+                        await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/stocks`, stockId));
+                    } catch (error) {
+                        console.error("Error deleting stock:", error);
+                        alert("Failed to delete stock.");
+                    }
+                }
+            } else if (target.closest('[data-stock-id]')) {
+                const stockCard = target.closest('[data-stock-id]');
+                const idToFetch = stockCard.dataset.stockId;
+                 
+                const stocksCollection = collection(db, `artifacts/${appId}/users/${userId}/stocks`);
+                const stockRef = doc(stocksCollection, idToFetch);
+                
+                const docSnap = await getDoc(stockRef);
+
+                if (docSnap.exists()) {
+                    const stockData = { id: docSnap.id, ...docSnap.data() };
+                    populateFormForEdit(stockData);
+                    calculateValuation(stockData);
+                    aiAnalysisOutput.innerHTML = '<p class="text-center text-gray-400">Click "Analyze" for an updated business quality overview.</p>';
+                }
+            }
+        });
+        
+        // Initialize the application
+        initFirebase();
+    </script>
+</body>
+</html>
