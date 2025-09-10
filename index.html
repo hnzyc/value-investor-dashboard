@@ -7,77 +7,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827;
-            color: #d1d5db;
-        }
-        .card {
-            background-color: #1f2937;
-            border: 1px solid #374151;
-        }
-        .input-field {
-            background-color: #374151;
-            border: 1px solid #4b5563;
-            color: #d1d5db;
-        }
-        .btn-primary {
-            background-color: #3b82f6;
-            color: white;
-            transition: background-color 0.3s;
-        }
-        .btn-primary:hover {
-            background-color: #2563eb;
-        }
-        .btn-secondary {
-            background-color: #4b5563;
-            color: white;
-            transition: background-color 0.3s;
-        }
-        .btn-secondary:hover {
-            background-color: #6b7280;
-        }
-         .btn-danger {
-            background-color: #ef4444;
-            color: white;
-            transition: background-color 0.3s;
-        }
-        .btn-danger:hover {
-            background-color: #dc2626;
-        }
-        .result-box {
-            border: 2px solid;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            text-align: center;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #d1d5db; }
+        .card { background-color: #1f2937; border: 1px solid #374151; }
+        .input-field { background-color: #374151; border: 1px solid #4b5563; color: #d1d5db; }
+        .btn-primary { background-color: #3b82f6; color: white; transition: background-color 0.3s; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .btn-secondary { background-color: #4b5563; color: white; transition: background-color 0.3s; }
+        .btn-secondary:hover { background-color: #6b7280; }
+        .btn-danger { background-color: #ef4444; color: white; transition: background-color 0.3s; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .result-box { border: 2px solid; padding: 1rem; border-radius: 0.5rem; text-align: center; }
         .buy-zone { border-color: #22c55e; color: #22c55e; }
         .hold-zone { border-color: #eab308; color: #eab308; }
         .sell-zone { border-color: #ef4444; color: #ef4444; }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        .ai-analysis-content h4 {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: #60a5fa; /* A lighter blue */
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
-        }
-        .ai-analysis-content p {
-            margin-bottom: 0.75rem;
-            line-height: 1.6;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        .ai-analysis-content h4 { font-size: 1.125rem; font-weight: 600; color: #60a5fa; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .ai-analysis-content p { margin-bottom: 0.75rem; line-height: 1.6; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -191,20 +137,19 @@
         </main>
     </div>
 
-    <!-- Corrected Firebase & Application Script -->
+    <!-- Updated Secure Firebase & Application Script -->
     <script type="module">
         // --- Your Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyCKoKZ7EOyGMDRhaO4bCaJSSDreJXH2WL8",
             authDomain: "my-firebase-app-9aa8a.firebaseapp.com",
             projectId: "my-firebase-app-9aa8a",
-            storageBucket: "my-firebase-app-9aa8a.appspot.com", // Corrected storageBucket name
+            storageBucket: "my-firebase-app-9aa8a.appspot.com",
             messagingSenderId: "876784715917",
             appId: "1:876784715917:web:5ba9417d0ee3fbd9cf3ac4",
             measurementId: "G-YJFX7E92JP"
         };
         
-        const apiKey = firebaseConfig.apiKey;
         const appId = firebaseConfig.appId;
 
         // --- Firebase Module Imports ---
@@ -256,7 +201,6 @@
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
                 userIdDisplay.textContent = "Connection Failed";
-                resultOutput.innerHTML = `<p class="text-red-500">Error initializing application. Check console for details.</p>`;
             }
         }
         
@@ -276,7 +220,7 @@
                 renderStockList(stocks);
             }, (error) => {
                 console.error("Error listening to stocks:", error);
-                stockListDiv.innerHTML = `<p class="text-red-500">Could not load watchlist. Please refresh.</p>`;
+                stockListDiv.innerHTML = `<p class="text-red-500">Could not load watchlist.</p>`;
             });
         }
 
@@ -392,45 +336,29 @@
             overvaluedPEInput.value = 50;
         }
         
-        async function callGeminiAPI(systemPrompt, userQuery, retries = 3, delay = 1000) {
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                tools: [{ "google_search": {} }],
-                systemInstruction: {
-                    parts: [{ text: systemPrompt }]
-                },
-            };
+        async function callGeminiAPI(systemPrompt, userQuery) {
+            // The frontend now calls our OWN secure function, not Google's API directly.
+            const proxyUrl = '/.netlify/functions/gemini-proxy';
 
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
+            try {
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ systemPrompt, userQuery }) // Send prompts to our function
+                });
 
-                    if (!response.ok) {
-                        const errorBody = await response.json();
-                        console.error("API Error Response:", errorBody);
-                        throw new Error(`API call failed with status: ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    const candidate = result.candidates?.[0];
-                    if (candidate && candidate.content?.parts?.[0]?.text) {
-                        return candidate.content.parts[0].text;
-                    } else {
-                         throw new Error("Invalid response structure from API.");
-                    }
-                } catch (error) {
-                    if (i === retries - 1) {
-                         console.error(`API call failed after ${retries} attempts:`, error);
-                         return null;
-                    }
-                    await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    console.error("Proxy Error Response:", errorBody);
+                    throw new Error(`Proxy call failed with status: ${response.status}`);
                 }
+
+                const result = await response.json();
+                return result.text; // Our function will return the AI's text directly
+
+            } catch (error) {
+                console.error("Failed to call the backend proxy function:", error);
+                return null;
             }
         }
 
@@ -452,7 +380,7 @@
                     .replace(/\n/g, '<br>');
                 aiAnalysisOutput.innerHTML = `<div class="ai-analysis-content">${htmlAnalysis}</div>`;
             } else {
-                aiAnalysisOutput.innerHTML = '<p class="text-red-500">Failed to fetch analysis. The API key might be invalid or the service is unavailable. Check the console for errors.</p>';
+                aiAnalysisOutput.innerHTML = '<p class="text-red-500">Failed to fetch analysis. Check the function logs on Netlify for errors.</p>';
             }
         }
 
@@ -483,7 +411,7 @@ Your response MUST be in JSON format like this: {"currentProfit": 101.5, "future
                      alert("AI returned an invalid format. Please try again.");
                 }
             } else {
-                alert("Failed to get a forecast suggestion. The API key might be invalid or the service is unavailable. Check the console for errors.");
+                alert("Failed to get a forecast suggestion. Check the function logs on Netlify for errors.");
             }
             
             suggestForecastBtn.disabled = false;
@@ -568,3 +496,4 @@ Your response MUST be in JSON format like this: {"currentProfit": 101.5, "future
     </script>
 </body>
 </html>
+
