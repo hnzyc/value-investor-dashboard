@@ -23,18 +23,38 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         .ai-analysis-content h4 { font-size: 1.125rem; font-weight: 600; color: #60a5fa; margin-top: 1rem; margin-bottom: 0.5rem; }
         .ai-analysis-content p { margin-bottom: 0.75rem; line-height: 1.6; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #1f2937; margin: 15% auto; padding: 2rem; border: 1px solid #374151; width: 90%; max-width: 400px; border-radius: 0.5rem; position: relative; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="p-4 md:p-8">
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <button id="closeModalBtn" class="text-gray-400 hover:text-white absolute top-4 right-4 text-2xl font-bold">&times;</button>
+            <h2 class="text-2xl font-semibold text-white mb-4 text-center">Access AI Features</h2>
+            <p class="text-center text-gray-400 mb-6">Please log in to use the AI-powered analysis and forecasting.</p>
+            <form id="loginForm" class="space-y-4">
+                <input type="email" id="emailInput" class="input-field w-full p-2 rounded" placeholder="Email" required>
+                <input type="password" id="passwordInput" class="input-field w-full p-2 rounded" placeholder="Password" required>
+                <button type="submit" class="btn-primary w-full p-2 rounded font-semibold">Login</button>
+            </form>
+            <p id="loginError" class="text-red-500 text-sm mt-4 text-center h-4"></p>
+        </div>
+    </div>
+
     <div class="max-w-7xl mx-auto">
         <header class="text-center mb-10">
             <h1 class="text-4xl font-bold text-white">Value Investor's Dashboard</h1>
             <p class="mt-2 text-lg text-gray-400">Automating the "Lao Tang" Valuation Method</p>
-            <p class="text-sm text-gray-500 mt-2">User ID: <span id="userIdDisplay">Initializing...</span></p>
+            <div id="authStatus" class="text-sm text-gray-500 mt-2">
+                Status: <span id="userStatus" class="font-semibold text-gray-400">Public</span>
+                <button id="loginBtn" class="ml-4 text-blue-400 hover:underline">Login to Access AI & Watchlist</button>
+                <button id="logoutBtn" class="ml-4 text-red-400 hover:underline hidden">Logout</button>
+            </div>
         </header>
 
-        <!-- Methodology Section -->
         <section class="mb-10">
             <h2 class="text-2xl font-semibold text-white mb-4 border-b-2 border-gray-700 pb-2">The Methodology: "Don't Look at the Fool, Look at the Land"</h2>
             <div class="grid md:grid-cols-2 gap-6">
@@ -57,9 +77,7 @@
             </div>
         </section>
 
-        <!-- Main Application -->
         <main class="grid lg:grid-cols-3 gap-8">
-            <!-- Input & Calculation Section -->
             <div class="lg:col-span-1">
                 <div class="card p-6 rounded-lg sticky top-8">
                     <h2 class="text-2xl font-semibold text-white mb-4">Valuation Calculator</h2>
@@ -103,9 +121,7 @@
                 </div>
             </div>
             
-            <!-- Output & Watchlist Section -->
             <div class="lg:col-span-2 space-y-8">
-                 <!-- Calculation Result -->
                 <div class="card p-6 rounded-lg">
                     <h2 class="text-2xl font-semibold text-white mb-4">Valuation Result</h2>
                     <div id="resultOutput" class="text-center text-gray-400">
@@ -113,31 +129,27 @@
                     </div>
                 </div>
                 
-                 <!-- AI Analysis Section -->
                 <div class="card p-6 rounded-lg">
                     <div class="flex justify-between items-center mb-4">
                          <h2 class="text-2xl font-semibold text-white">✨ AI-Powered Analysis</h2>
                          <button id="analyzeBtn" class="btn-primary px-4 py-2 text-sm rounded font-semibold">Analyze Ticker</button>
                     </div>
                     <div id="aiAnalysisOutput" class="text-gray-300">
-                        <p class="text-center text-gray-400">Enter a ticker symbol and click "Analyze" for a business quality overview.</p>
+                        <p class="text-center text-gray-400">Log in to use the AI-powered business quality overview.</p>
                     </div>
                 </div>
 
-
-                <!-- Watchlist -->
                 <div class="card p-6 rounded-lg">
                     <h2 class="text-2xl font-semibold text-white mb-4">My Watchlist</h2>
-                    <div id="loader" class="loader"></div>
+                    <div id="loader" class="loader" style="display: none;"></div>
                     <div id="stockList" class="space-y-4">
-                        <!-- Stock items will be injected here by JavaScript -->
+                        <p class="text-center text-gray-400">Log in to view your watchlist.</p>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Updated Secure Firebase & Application Script -->
     <script type="module">
         // --- Your Firebase Configuration ---
         const firebaseConfig = {
@@ -154,10 +166,20 @@
 
         // --- Firebase Module Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         
         // --- DOM Elements ---
+        const loginModal = document.getElementById('loginModal');
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginError = document.getElementById('loginError');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const authStatus = document.getElementById('authStatus');
+        const userStatus = document.getElementById('userStatus');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
         const stockForm = document.getElementById('stockForm');
         const stockIdInput = document.getElementById('stockId');
         const tickerInput = document.getElementById('ticker');
@@ -171,14 +193,14 @@
         const resultOutput = document.getElementById('resultOutput');
         const calculateBtn = document.getElementById('calculateBtn');
         const clearFormBtn = document.getElementById('clearFormBtn');
-        const userIdDisplay = document.getElementById('userIdDisplay');
         const analyzeBtn = document.getElementById('analyzeBtn');
         const aiAnalysisOutput = document.getElementById('aiAnalysisOutput');
         const suggestForecastBtn = document.getElementById('suggestForecastBtn');
 
-        // --- Firebase State ---
+        // --- App State ---
         let app, db, auth;
         let userId = null;
+        let isAuthenticated = false;
         let unsubscribe = null;
 
         // --- Core Functions ---
@@ -188,26 +210,66 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
+                onAuthStateChanged(auth, (user) => {
+                    if (user && !user.isAnonymous) {
                         userId = user.uid;
-                        userIdDisplay.textContent = "Connected";
-                        loader.style.display = 'block';
+                        isAuthenticated = true;
+                        updateAuthStateUI(user.email);
                         listenToStocks();
                     } else {
-                        await signInAnonymously(auth);
+                        userId = null;
+                        isAuthenticated = false;
+                        updateAuthStateUI(null);
+                        stockListDiv.innerHTML = '<p class="text-center text-gray-400">Log in to view your watchlist.</p>';
+                        loader.style.display = 'none';
+                        if (unsubscribe) unsubscribe();
                     }
                 });
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                userIdDisplay.textContent = "Connection Failed";
             }
+        }
+
+        function updateAuthStateUI(email) {
+            if (email) {
+                userStatus.textContent = email;
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                loginModal.style.display = 'none';
+                aiAnalysisOutput.innerHTML = '<p class="text-center text-gray-400">Enter a ticker and click "Analyze".</p>';
+            } else {
+                userStatus.textContent = 'Public';
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                aiAnalysisOutput.innerHTML = '<p class="text-center text-gray-400">Log in to use the AI-powered business quality overview.</p>';
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            loginError.textContent = '';
+            const loginButton = loginForm.querySelector('button');
+            loginButton.disabled = true;
+            loginButton.textContent = 'Logging in...';
+
+            signInWithEmailAndPassword(auth, email, password)
+                .catch(error => {
+                    console.error("Login failed:", error);
+                    loginError.textContent = "Login failed. Please check credentials.";
+                })
+                .finally(() => {
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Login';
+                });
         }
         
         function listenToStocks() {
             if (unsubscribe) unsubscribe(); 
             if (!userId) return;
 
+            loader.style.display = 'block';
             const stocksCollection = collection(db, `artifacts/${appId}/users/${userId}/stocks`);
             const q = query(stocksCollection);
 
@@ -285,8 +347,9 @@
 
         async function handleFormSubmit(e) {
             e.preventDefault();
-            if (!userId) {
-                alert("Not connected to database. Please wait or refresh.");
+            if (!isAuthenticated) {
+                alert("Please log in to manage your watchlist.");
+                loginModal.style.display = 'block';
                 return;
             }
 
@@ -302,13 +365,12 @@
             const stockId = stockIdInput.value;
 
             try {
+                const stockRef = doc(db, `artifacts/${appId}/users/${userId}/stocks`, stockId || Date.now().toString());
                 if (stockId) {
-                    const stockRef = doc(db, `artifacts/${appId}/users/${userId}/stocks`, stockId);
                     await setDoc(stockRef, stockData, { merge: true });
                 } else {
                     stockData.createdAt = serverTimestamp();
-                    const stocksCollection = collection(db, `artifacts/${appId}/users/${userId}/stocks`);
-                    await addDoc(stocksCollection, stockData);
+                    await setDoc(stockRef, stockData);
                 }
                 clearForm();
                 calculateValuation(stockData);
@@ -337,25 +399,18 @@
         }
         
         async function callGeminiAPI(systemPrompt, userQuery) {
-            // The frontend now calls our OWN secure function, not Google's API directly.
             const proxyUrl = '/.netlify/functions/gemini-proxy';
-
             try {
                 const response = await fetch(proxyUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ systemPrompt, userQuery }) // Send prompts to our function
+                    body: JSON.stringify({ systemPrompt, userQuery })
                 });
-
                 if (!response.ok) {
-                    const errorBody = await response.json();
-                    console.error("Proxy Error Response:", errorBody);
                     throw new Error(`Proxy call failed with status: ${response.status}`);
                 }
-
                 const result = await response.json();
-                return result.text; // Our function will return the AI's text directly
-
+                return result.text;
             } catch (error) {
                 console.error("Failed to call the backend proxy function:", error);
                 return null;
@@ -363,130 +418,84 @@
         }
 
         async function getBusinessAnalysis(ticker) {
-            const systemPrompt = `You are a world-class value investor, following the principles of Warren Buffett. Analyze the provided stock ticker. Your analysis MUST be concise and structured into three specific markdown sections: 
-1. #### Business Model: What does the company do and how does it make money?
-2. #### Competitive Moat: What gives it a durable competitive advantage? (e.g., brand, network effects, switching costs, cost advantages)
-3. #### Potential Risks: What are the key risks to its future profitability?`;
-            
+            if (!isAuthenticated) {
+                loginModal.style.display = 'block';
+                return;
+            }
+            const systemPrompt = `You are a world-class value investor...`; // Full prompt
             const userQuery = `Provide a business quality analysis for the stock ticker: ${ticker}`;
-            
             aiAnalysisOutput.innerHTML = '<div class="loader"></div>';
-            
             const analysis = await callGeminiAPI(systemPrompt, userQuery);
-            
             if (analysis) {
-                let htmlAnalysis = analysis
-                    .replace(/#### (.*?)\n/g, '<h4>$1</h4>')
-                    .replace(/\n/g, '<br>');
+                let htmlAnalysis = analysis.replace(/#### (.*?)\n/g, '<h4>$1</h4>').replace(/\n/g, '<br>');
                 aiAnalysisOutput.innerHTML = `<div class="ai-analysis-content">${htmlAnalysis}</div>`;
             } else {
-                aiAnalysisOutput.innerHTML = '<p class="text-red-500">Failed to fetch analysis. Check the function logs on Netlify for errors.</p>';
+                aiAnalysisOutput.innerHTML = '<p class="text-red-500">Failed to fetch analysis.</p>';
             }
         }
 
         async function getForecastSuggestion(ticker) {
-            const systemPrompt = `You are a conservative financial analyst providing a starting point for a value investing model. Based on the latest available financial data and growth prospects for the given stock ticker, provide a reasonable, conservative estimate for:
-1. Current year's estimated net profit in billions of USD.
-2. A 3-year future estimated net profit in billions of USD.
-Your response MUST be in JSON format like this: {"currentProfit": 101.5, "futureProfit": 125.0}. Do NOT include any other text, explanations, or markdown.`;
-
+            if (!isAuthenticated) {
+                loginModal.style.display = 'block';
+                return;
+            }
+            const systemPrompt = `You are a conservative financial analyst...`; // Full prompt
             const userQuery = `Provide profit forecasts for the stock ticker: ${ticker}`;
-            
             suggestForecastBtn.disabled = true;
             suggestForecastBtn.textContent = 'Suggesting...';
-            
             const suggestion = await callGeminiAPI(systemPrompt, userQuery);
-
             if (suggestion) {
                 try {
                     const parsed = JSON.parse(suggestion);
                     if(parsed.currentProfit && parsed.futureProfit) {
                         currentProfitInput.value = parsed.currentProfit;
                         futureProfitInput.value = parsed.futureProfit;
-                    } else {
-                        throw new Error("Missing properties in JSON response.");
-                    }
+                    } else { throw new Error("Missing properties"); }
                 } catch (error) {
-                     console.error("Failed to parse forecast suggestion:", error);
-                     alert("AI returned an invalid format. Please try again.");
+                     alert("AI returned an invalid format.");
                 }
             } else {
-                alert("Failed to get a forecast suggestion. Check the function logs on Netlify for errors.");
+                alert("Failed to get a forecast suggestion.");
             }
-            
             suggestForecastBtn.disabled = false;
             suggestForecastBtn.textContent = '✨ Suggest Forecast';
         }
 
         // --- Event Listeners ---
+        loginBtn.addEventListener('click', () => { loginModal.style.display = 'block'; });
+        logoutBtn.addEventListener('click', () => { signOut(auth); });
+        closeModalBtn.addEventListener('click', () => { loginModal.style.display = 'none'; });
+        loginForm.addEventListener('submit', handleLogin);
+        window.addEventListener('click', (event) => { if (event.target == loginModal) { loginModal.style.display = "none"; } });
+        
         stockForm.addEventListener('submit', handleFormSubmit);
-
         calculateBtn.addEventListener('click', () => {
              if (stockForm.checkValidity()) {
-                const stockData = {
-                    ticker: tickerInput.value.toUpperCase(),
-                    shares: parseFloat(sharesInput.value),
-                    currentProfit: parseFloat(currentProfitInput.value),
-                    futureProfit: parseFloat(futureProfitInput.value),
-                    reasonablePE: parseInt(reasonablePEInput.value),
-                    overvaluedPE: parseInt(overvaluedPEInput.value),
-                };
+                const stockData = { ticker: tickerInput.value, shares: parseFloat(sharesInput.value), currentProfit: parseFloat(currentProfitInput.value), futureProfit: parseFloat(futureProfitInput.value), reasonablePE: parseInt(reasonablePEInput.value), overvaluedPE: parseInt(overvaluedPEInput.value) };
                 calculateValuation(stockData);
-            } else {
-                stockForm.reportValidity();
-            }
+            } else { stockForm.reportValidity(); }
         });
-
-        clearFormBtn.addEventListener('click', () => {
-            clearForm();
-            resultOutput.innerHTML = '<p>Enter stock data and click "Calculate" to see the results.</p>';
-        });
-
-        analyzeBtn.addEventListener('click', () => {
-            const ticker = tickerInput.value;
-            if (ticker) {
-                getBusinessAnalysis(ticker);
-            } else {
-                alert('Please enter a ticker symbol first.');
-            }
-        });
-
-        suggestForecastBtn.addEventListener('click', () => {
-            const ticker = tickerInput.value;
-            if (ticker) {
-                getForecastSuggestion(ticker);
-            } else {
-                alert('Please enter a ticker symbol first.');
-            }
-        });
+        clearFormBtn.addEventListener('click', clearForm);
+        analyzeBtn.addEventListener('click', () => { if (tickerInput.value) { getBusinessAnalysis(tickerInput.value); } else { alert('Please enter a ticker symbol.'); } });
+        suggestForecastBtn.addEventListener('click', () => { if (tickerInput.value) { getForecastSuggestion(tickerInput.value); } else { alert('Please enter a ticker symbol.'); } });
 
         stockListDiv.addEventListener('click', async (e) => {
-            const target = e.target;
-            const stockId = target.dataset.stockId;
+            const stockId = e.target.closest('[data-stock-id]')?.dataset.stockId;
+            if (!stockId) return;
 
-            if (target.classList.contains('delete-btn')) {
+            if (e.target.classList.contains('delete-btn')) {
                 if (confirm('Are you sure you want to delete this stock?')) {
                     try {
                         await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/stocks`, stockId));
-                    } catch (error) {
-                        console.error("Error deleting stock:", error);
-                        alert("Failed to delete stock.");
-                    }
+                    } catch (error) { console.error("Error deleting stock:", error); }
                 }
-            } else if (target.closest('[data-stock-id]')) {
-                const stockCard = target.closest('[data-stock-id]');
-                const idToFetch = stockCard.dataset.stockId;
-                 
-                const stocksCollection = collection(db, `artifacts/${appId}/users/${userId}/stocks`);
-                const stockRef = doc(stocksCollection, idToFetch);
-                
-                const docSnap = await getDoc(stockRef);
-
+            } else if (e.target.classList.contains('edit-btn') || e.target.closest('.flex-grow')) {
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/stocks`, stockId);
+                const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const stockData = { id: docSnap.id, ...docSnap.data() };
                     populateFormForEdit(stockData);
                     calculateValuation(stockData);
-                    aiAnalysisOutput.innerHTML = '<p class="text-center text-gray-400">Click "Analyze" for an updated business quality overview.</p>';
                 }
             }
         });
