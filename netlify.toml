@@ -13,9 +13,6 @@
   # Directory containing serverless functions
   directory = "netlify/functions/"
 
-  # Function timeout (max 26 seconds for Netlify Functions)
-  timeout = 26
-
 # Header rules for better performance and security
 [[headers]]
   # Apply to all files
