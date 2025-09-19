@@ -72,7 +72,7 @@ Located in `js/app.js` calculateValuation() method:
 - **Ideal Buy Price**: (Future Profit × Reasonable P/E × 0.5) / Shares
 - **Obvious Sell Price**: Minimum of:
   1. (Current Profit × Overvalued P/E) / Shares
-  2. (Future Profit × 1.5) / Shares
+  2. (Future Profit × 150) / Shares
 
 This conservative dual-method approach ensures exit before extreme overvaluation.
 

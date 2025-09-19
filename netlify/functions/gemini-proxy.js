@@ -83,7 +83,6 @@ exports.handler = async function(event, context) {
 
         const payload = {
             contents: [{ parts: [{ text: userQuery }] }],
-            tools: [{ "google_search": {} }],
             systemInstruction: {
                 parts: [{ text: systemPrompt }]
             },
