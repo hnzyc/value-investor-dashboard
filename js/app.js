@@ -326,7 +326,7 @@ class ValueInvestorApp {
 
         // New Obvious Sell Point calculation: minimum of two options
         const sellOption1 = currentProfit * overvaluedPE; // Current Year's Net Profit × Overvalued P/E
-        const sellOption2 = futureProfit * 1.5; // 3-Year Future Net Profit × 150%
+        const sellOption2 = futureProfit * 150; // 3-Year Future Net Profit × 150
         const obviousSellPointTotal = Math.min(sellOption1, sellOption2);
         const obviousSellPrice = obviousSellPointTotal / shares;
 
