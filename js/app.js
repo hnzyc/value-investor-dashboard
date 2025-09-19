@@ -15,7 +15,8 @@ class ValueInvestorApp {
         this.userId = null;
         this.isAuthenticated = false;
         this.unsubscribe = null;
-        this.validator = new FormValidator();
+        this.stockValidator = new FormValidator();
+        this.loginValidator = new FormValidator();
 
         this.init();
     }
@@ -87,44 +88,44 @@ class ValueInvestorApp {
     }
 
     setupFormValidation() {
-        // Add validation rules to form fields
-        this.validator.addField(elements.tickerInput, [
+        // Add validation rules to stock form fields
+        this.stockValidator.addField(elements.tickerInput, [
             validationRules.required(),
             validationRules.ticker()
         ]);
 
-        this.validator.addField(elements.sharesInput, [
+        this.stockValidator.addField(elements.sharesInput, [
             validationRules.required(),
             validationRules.positiveNumber('Please enter a positive number for shares outstanding')
         ]);
 
-        this.validator.addField(elements.currentProfitInput, [
+        this.stockValidator.addField(elements.currentProfitInput, [
             validationRules.required(),
             validationRules.positiveNumber('Please enter a positive number for current profit')
         ]);
 
-        this.validator.addField(elements.futureProfitInput, [
+        this.stockValidator.addField(elements.futureProfitInput, [
             validationRules.required(),
             validationRules.positiveNumber('Please enter a positive number for future profit')
         ]);
 
-        this.validator.addField(elements.reasonablePEInput, [
+        this.stockValidator.addField(elements.reasonablePEInput, [
             validationRules.required(),
             validationRules.positiveInteger('Please enter a positive whole number for P/E ratio')
         ]);
 
-        this.validator.addField(elements.overvaluedPEInput, [
+        this.stockValidator.addField(elements.overvaluedPEInput, [
             validationRules.required(),
             validationRules.positiveInteger('Please enter a positive whole number for P/E ratio')
         ]);
 
-        // Login form validation
-        this.validator.addField(elements.emailInput, [
+        // Login form validation (separate validator)
+        this.loginValidator.addField(elements.emailInput, [
             validationRules.required(),
             validationRules.email()
         ]);
 
-        this.validator.addField(elements.passwordInput, [
+        this.loginValidator.addField(elements.passwordInput, [
             validationRules.required(),
             validationRules.minLength(6, 'Password must be at least 6 characters')
         ]);
@@ -153,7 +154,7 @@ class ValueInvestorApp {
         elements.stockForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
 
         elements.calculateBtn.addEventListener('click', () => {
-            if (this.validator.validateAll()) {
+            if (this.stockValidator.validateAll()) {
                 const stockData = this.getFormData();
                 this.calculateValuation(stockData);
             } else {
@@ -223,7 +224,7 @@ class ValueInvestorApp {
     async handleLogin(e) {
         e.preventDefault();
 
-        if (!this.validator.validateAll()) {
+        if (!this.loginValidator.validateAll()) {
             toast.warning('Please fix the form errors');
             return;
         }
@@ -392,7 +393,7 @@ class ValueInvestorApp {
             return;
         }
 
-        if (!this.validator.validateAll()) {
+        if (!this.stockValidator.validateAll()) {
             toast.warning('Please fix the form errors before saving');
             return;
         }
@@ -476,7 +477,7 @@ class ValueInvestorApp {
         elements.overvaluedPEInput.value = 50;
 
         // Clear validation errors
-        this.validator.errors.clear();
+        this.stockValidator.errors.clear();
         document.querySelectorAll('.error-message').forEach(el => el.remove());
         document.querySelectorAll('.border-red-500').forEach(el => {
             el.classList.remove('border-red-500', 'focus:border-red-500');
