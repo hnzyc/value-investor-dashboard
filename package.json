@@ -1,0 +1,14 @@
+{
+  "name": "value-investor-dashboard",
+  "version": "1.0.0",
+  "description": "Value Investor's Dashboard with optimized performance",
+  "scripts": {
+    "build-css": "tailwindcss -i ./src/styles.css -o ./css/styles.css --minify",
+    "watch-css": "tailwindcss -i ./src/styles.css -o ./css/styles.css --watch",
+    "dev": "netlify dev",
+    "deploy": "npm run build-css && netlify deploy --prod"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
